@@ -21,6 +21,7 @@ For department installation, first-time configuration, and reusable prompt examp
 Default to **fast mode** for routine weekly station updates:
 
 - Use official page visible text or page state extraction, official Excel parsing, and workbook value/style checks.
+- Treat UTC+8 cross-midnight schedules as normal FIBA 3x3 behavior; sort by UTC+8 datetime and rebuild date merges without escalating by default.
 - Verify with workbook loadability, row count, first/last times, WT/WS D-column colors, date merges, and stale-template scan.
 - Do not perform visual rendering unless the user asks, the template changed, or content/style validation indicates risk.
 
@@ -28,7 +29,7 @@ Use **strict mode** when any of these apply:
 
 - New workbook template or materially changed layout.
 - First time handling a new competition type.
-- WT + WS combined sheet with unusual cross-midnight ordering.
+- WT + WS combined sheet has ambiguous ordering after UTC+8 conversion, conflicting source order, or date merges cannot be determined confidently.
 - Website and official Excel disagree.
 - User asks for full visual/style QA.
 - Fast-mode verification finds suspicious colors, merges, row counts, or stale content.
@@ -54,17 +55,26 @@ Recommended web extraction order:
 3. If parsing is ambiguous, save a compact page text dump and compare against the visible browser page before writing.
 4. If the website still cannot be parsed, ask the user for the official Schedule Matrix Excel.
 
-## Workbook Targets
+## Workbook Targets and Attachments
 
-Always prefer an explicit workbook path from the user. If the user attaches or mentions files in the conversation, prefer those real file paths over placeholder text such as `/absolute/path/to/...`. For shared department use, do not assume another user's local path.
+Prefer files supplied in the current conversation before asking for manual paths. If the user attaches, drags, pastes, or mentions files in the message, use the platform-provided real file paths over placeholder text such as `/absolute/path/to/...`.
+
+If both a placeholder path and attached files exist, attached files win. For shared department use, do not assume another user's local path.
 
 Configuration fields to identify before editing:
 
-- `workbook_path`: the target FIBA 3x3 workbook.
+- `workbook_path`: the target FIBA 3x3 workbook; may come from an attached or pasted file.
 - `source_links`: one or more official WT/WS/World Cup games links.
-- `source_files`: optional official Schedule Matrix Excel files.
+- `source_files`: optional official Schedule Matrix Excel files; may come from attachments and do not require manual paths when available.
 - `station_name_cn`: Chinese station name used for sheet naming.
 - `event_types`: `WS`, `WT`, or `WT+WS`.
+
+When multiple files are attached, classify them by filename and context:
+
+- Main workbook: names like `2026 FIBA 3x3 赛程.xlsx`.
+- WT source: names containing `WT`, `World Tour`, or `Schedule Matrix`.
+- WS source: names containing `Women's Series`, `Womens Series`, or `WS`.
+- Ask only when multiple plausible files remain for the same role.
 
 Kiren's local default workbook path pattern:
 
@@ -182,7 +192,9 @@ When a city/team translation is uncertain, search for a reliable Chinese label b
 
 ## Ordering Combined WT/WS Sheets
 
-For combined WT + WS sheets, sort all games by UTC+8 datetime across both competitions, not by source order. This keeps cross-midnight schedules readable.
+For combined WT + WS sheets, sort all games by UTC+8 datetime across both competitions, not by source order. Cross-midnight schedules are common, especially for Europe and Americas stops, and should stay in fast mode when the converted order is clear.
+
+Escalate to strict mode only when UTC+8 conversion leaves the order ambiguous, the official sources conflict, or date merges cannot be rebuilt confidently.
 
 Gender marker in column F:
 
