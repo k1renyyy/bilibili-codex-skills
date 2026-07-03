@@ -16,6 +16,25 @@ Use this skill for recurring FIBA 3x3 schedule operations:
 
 For department installation, first-time configuration, and reusable prompt examples, read `references/department-usage.md` when the user asks to distribute, install, configure, onboard teammates, or document usage.
 
+## Operating Modes
+
+Default to **fast mode** for routine weekly station updates:
+
+- Use official page visible text or page state extraction, official Excel parsing, and workbook value/style checks.
+- Verify with workbook loadability, row count, first/last times, WT/WS D-column colors, date merges, and stale-template scan.
+- Do not perform visual rendering unless the user asks, the template changed, or content/style validation indicates risk.
+
+Use **strict mode** when any of these apply:
+
+- New workbook template or materially changed layout.
+- First time handling a new competition type.
+- WT + WS combined sheet with unusual cross-midnight ordering.
+- Website and official Excel disagree.
+- User asks for full visual/style QA.
+- Fast-mode verification finds suspicious colors, merges, row counts, or stale content.
+
+Strict mode may add visual render checks, deeper style comparison, and cross-source reconciliation. If rendering tools fail due native dependencies, report that and continue with fast-mode evidence instead of blocking routine updates.
+
 ## Source Priority
 
 Prefer sources in this order:
@@ -26,11 +45,18 @@ Prefer sources in this order:
 
 If an official Excel file and website disagree, tell the user and ask which source to treat as authoritative unless the user already specified one.
 
-For web pages that block direct HTTP access, use a browser-rendered scrape with Playwright/Chrome. Do not rely on stale cached JSON unless the user explicitly asks for a historical snapshot.
+For web pages that block direct HTTP access, use browser-rendered scraping with Playwright/Chrome. Do not rely on stale cached JSON unless the user explicitly asks for a historical snapshot.
+
+Recommended web extraction order:
+
+1. Inspect page state/data objects if available, such as `window.__fiba`, `window.__NUXT__`, `__NEXT_DATA__`, or similar app state.
+2. If structured state is unavailable, parse the visible schedule text after the page renders.
+3. If parsing is ambiguous, save a compact page text dump and compare against the visible browser page before writing.
+4. If the website still cannot be parsed, ask the user for the official Schedule Matrix Excel.
 
 ## Workbook Targets
 
-Always prefer an explicit workbook path from the user. For shared department use, do not assume another user's local path.
+Always prefer an explicit workbook path from the user. If the user attaches or mentions files in the conversation, prefer those real file paths over placeholder text such as `/absolute/path/to/...`. For shared department use, do not assume another user's local path.
 
 Configuration fields to identify before editing:
 
@@ -178,7 +204,7 @@ Do not count Clean Court, breaks, ceremonies, Shoot Out, Dunk Contest, or Local 
 
 ## Verification Before Completion
 
-Before claiming completion, run a fresh verification that opens the workbook and checks:
+Before claiming completion, run a fresh verification. In fast mode, check:
 
 - Target sheet exists with the expected canonical name.
 - Number of written games equals official game count.
@@ -187,6 +213,9 @@ Before claiming completion, run a fresh verification that opens the workbook and
 - Column A date merges match UTC+8 dates.
 - Old station/team names from the template do not remain.
 - Workbook can be loaded successfully after save.
+- Workbook xlsx zip is structurally readable when possible.
+
+In strict mode, additionally check visual render output or a deeper style snapshot when the environment supports it.
 
 In the final response, summarize:
 
