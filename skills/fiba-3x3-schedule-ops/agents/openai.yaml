@@ -1,0 +1,4 @@
+interface:
+  display_name: "FIBA 3x3 Schedule Ops"
+  short_description: "Create/update FIBA 3x3 WT/WS schedule sheets and daily UTC+8 windows."
+  default_prompt: "使用 fiba-3x3-schedule-ops。请根据官方链接或 Schedule Matrix 文件，在指定 FIBA 3x3 工作簿中创建/更新站次 sheet，或计算每天开赛/结束时间。"
